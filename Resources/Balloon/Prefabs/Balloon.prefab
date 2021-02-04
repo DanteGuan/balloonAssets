@@ -67,7 +67,7 @@ Rigidbody2D:
   m_Mass: 10
   m_LinearDrag: 0
   m_AngularDrag: 10
-  m_GravityScale: 1
+  m_GravityScale: -1
   m_Material: {fileID: 6200000, guid: e061c71b233b1ed4fa928dc4ab479e10, type: 2}
   m_Interpolate: 0
   m_SleepingMode: 2
@@ -80,7 +80,7 @@ ConstantForce2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8021210176230685131}
-  m_Enabled: 1
+  m_Enabled: 0
   m_Force: {x: 0, y: 0}
   m_RelativeForce: {x: 0, y: 0}
   m_Torque: 0

@@ -36,6 +36,7 @@ public class Balloon : MonoBehaviour
         this._config = config;
         //_collider.radius = config.size;
         _image.sprite = LoadSourceSprite(config.imagePath);
+        _rigidBody.gravityScale = -config.size;
     }
 
     public void Shoot()

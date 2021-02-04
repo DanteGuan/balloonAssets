@@ -10,4 +10,10 @@ public enum EventType
 
     AddScore,
     ScoreChange,
+    BeginUIInteract,
+    EndUIInteract,
+
+    BalloonInteractBegin,
+    BalloonInteractDraging,
+    BalloonInteractEnd,
 }

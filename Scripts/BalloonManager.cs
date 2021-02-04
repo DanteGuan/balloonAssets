@@ -14,11 +14,14 @@ public class BalloonManager : MonoBehaviour
     [SerializeField]
     private Transform _finishTransform;
 
+    private Vector3 _shooterTargetPos;
+
     private float _shooterLerpTime = 0.1f;
     private Vector3 _oriShooterPos;
     private float _shooterLerpTimer = 0;
     private float _shootTime = 0.8f;
     private float _shootTimer = 0f;
+    private bool _isInUIInteract = false;
 
     private List<Balloon> _bollons = new List<Balloon>();
     // Start is called before the first frame update
@@ -27,6 +30,11 @@ public class BalloonManager : MonoBehaviour
         //EventUtil.AddListener(EventType.FinishLaunch, finishLaunch);
         EventUtil.AddListener(EventType.Destroy, balloonDestroy);
         EventUtil.AddListener(EventType.GameFinish, gameFinish);
+        EventUtil.AddListener(EventType.BeginUIInteract, beginUIInteract);
+        EventUtil.AddListener(EventType.EndUIInteract, endUIInteract);
+        EventUtil.AddListener(EventType.BalloonInteractBegin, balloonInteractBegin);
+        EventUtil.AddListener(EventType.BalloonInteractDraging, balloonInteractDraging);
+        EventUtil.AddListener(EventType.BalloonInteractEnd, balloonInteractEnd);
 
         _currentBalloon = randomGenerateBalloon();
 
@@ -40,6 +48,43 @@ public class BalloonManager : MonoBehaviour
             new Vector3(screenWidth * 0.5f, screenHeight * 0.1f, 0));
         shootPos.z = 0;
         _shooter.position = shootPos;
+        _shooterTargetPos = shootPos;
+    }
+
+    void balloonInteractBegin(object args)
+    {
+        _shooterLerpTimer = 0;
+        _oriShooterPos = _shooter.position;
+        balloonInteractDraging(args);
+    }
+
+    void balloonInteractDraging(object args)
+    {
+        var mousePos = Input.mousePosition;
+        mousePos.x = Mathf.Clamp(mousePos.x, 0, Screen.width);
+        mousePos = Camera.main.ScreenToWorldPoint(mousePos);
+        _shooterTargetPos = new Vector3(mousePos.x, _shooter.position.y, _shooter.position.z);
+    }
+
+    void balloonInteractEnd(object args)
+    {
+        if(_currentBalloon)
+        {
+            _currentBalloon.Shoot();
+            _lastBalloon = _currentBalloon;
+            _currentBalloon = null;
+            _shootTimer = 0f;
+        }
+    }
+
+    void beginUIInteract(object args)
+    {
+        _isInUIInteract = true;
+    }
+
+    void endUIInteract(object args)
+    {
+        _isInUIInteract = false;
     }
 
     void gameFinish(object args)
@@ -83,33 +128,15 @@ public class BalloonManager : MonoBehaviour
         if(_currentBalloon == null && _shootTime <= _shootTimer)
         {
             _currentBalloon = randomGenerateBalloon();
-        }
-        if (Input.GetMouseButtonDown(0))
-        {
-            _shooterLerpTimer = 0;
-            _oriShooterPos = _shooter.position;
-        }
-        if(Input.GetMouseButton(0))
-        {
-            _shooterLerpTimer += Time.deltaTime;
-            float prograss = _shooterLerpTimer / _shooterLerpTime;
-            var mousePos = Input.mousePosition;
-            mousePos.x = Mathf.Clamp(mousePos.x, 0, Screen.width);
-            mousePos = Camera.main.ScreenToWorldPoint(mousePos);
-            var targetPos = new Vector3(mousePos.x, _shooter.position.y, _shooter.position.z);
-            _shooter.position = Vector3.Lerp(_oriShooterPos, targetPos, prograss);
-        }
-        if(_currentBalloon != null)
-        {
             _currentBalloon.transform.position = _shooter.position;
         }
+        _shooterLerpTimer += Time.deltaTime;
+        float prograss = _shooterLerpTimer / _shooterLerpTime;
+        _shooter.position = Vector3.Lerp(_oriShooterPos, _shooterTargetPos, prograss);
 
-        if (Input.GetMouseButtonUp(0) && _currentBalloon)
+        if (_currentBalloon != null)
         {
-            _currentBalloon.Shoot();
-            _lastBalloon = _currentBalloon;
-            _currentBalloon = null;
-            _shootTimer = 0f;
+            _currentBalloon.transform.position = _shooter.position;
         }
     }
 }
