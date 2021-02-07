@@ -17,16 +17,18 @@ public class Balloon : MonoBehaviour
 
     private float _mergeTime = 0.3f;
     private bool _canMerge = true;
-    private bool _shooting = true;
+    private bool _shooting = false;
 
-    private float _finishTimer = -1;
-    private float _finishTime = 5;
+    public bool isFinishShooting = false;
+
+    public float inFinishAreaTime = -1;
 
     private void Awake()
     {
         _rigidBody = GetComponent<Rigidbody2D>();
         _rigidBody.constraints = RigidbodyConstraints2D.FreezePositionY;
-        _canMerge = false;
+        _canMerge = false; 
+        _shooting = false;
     }
 
     public void Init(int id)
@@ -37,6 +39,7 @@ public class Balloon : MonoBehaviour
         //_collider.radius = config.size;
         _image.sprite = LoadSourceSprite(config.imagePath);
         _rigidBody.gravityScale = -config.size;
+        _rigidBody.mass = config.mass;
     }
 
     public void Shoot()
@@ -68,19 +71,15 @@ public class Balloon : MonoBehaviour
     {
         if (!_shooting && collision.CompareTag("Finish"))
         {
-            _finishTimer = 0.01f;
+            inFinishAreaTime = Time.time;
         }
     }
 
     private void OnTriggerStay2D(Collider2D collision)
     {
-        if (_finishTimer >= 0)
+        if (!_shooting && collision.CompareTag("Finish") && inFinishAreaTime < 0)
         {
-            _finishTimer += Time.fixedDeltaTime;
-            if (_finishTimer >= _finishTime)
-            {
-                EventUtil.SendMessage(EventType.GameFinish, this);
-            }
+            inFinishAreaTime = Time.time;
         }
     }
 
@@ -88,16 +87,23 @@ public class Balloon : MonoBehaviour
     {
         if (collision.CompareTag("Finish"))
         {
-            _finishTimer = -1;
+            inFinishAreaTime = -1;
         }
+    }
+
+    public void ResetInFinishTime()
+    {
+        inFinishAreaTime = -1;
     }
 
     private void processCollide(Collision2D collision)
     {
         if (_shooting && (collision.collider.CompareTag("Ceil") || collision.collider.CompareTag("Balloon")))
         {
+            isFinishShooting = true;
             _shooting = false;
-            EventUtil.SendMessage(EventType.FinishLaunch, this);
+            EventUtil.SendMessage(BallonEventType.FinishLaunch, this);
+            SoundManager.Instance.PlayImpactSound();
         }
         if(!_shooting)
         {
@@ -131,6 +137,10 @@ public class Balloon : MonoBehaviour
     {
         if (this._config.nextID > 0)
         {
+            if(this._config.nextID >= 1)
+            {
+                SoundManager.Instance.PlayMergeSound();
+            }
             _mergeParticle.Stop();
             _mergeParticle.Play();
             upgrade();
@@ -138,16 +148,28 @@ public class Balloon : MonoBehaviour
             _canMerge = false;
             StartCoroutine(mergeCoroutine(from._image));
 
-            EventUtil.SendMessage(EventType.Destroy, from);
+            EventUtil.SendMessage(BallonEventType.Destroy, from);
             Destroy(from.gameObject);
         }
     }
+
+    public ParticleSystem DestroySelf()
+    {
+        EventUtil.SendMessage(BallonEventType.Destroy, this);
+        _mergeParticle.transform.SetParent(transform.parent);
+        Destroy(this.gameObject);
+        return _mergeParticle;
+    }
     private void upgrade()
     {
-        EventUtil.SendMessage(EventType.AddScore, _config.score);
+        EventUtil.SendMessage(BallonEventType.AddScore, _config.score);
         _collider.enabled = false;
         this.Init(this._config.nextID);
         _collider.enabled = true;
+        if(this._config.nextID > PlayerPrefs.GetInt("topBalloonID", 1))
+        {
+            PlayerPrefs.SetInt("topBalloonID", this._config.nextID);
+        }
     }
 
     IEnumerator mergeCoroutine(SpriteRenderer other)

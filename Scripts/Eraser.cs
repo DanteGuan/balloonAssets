@@ -1,80 +1,78 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.Advertisements;
-public class Eraser : MonoBehaviour, IDragHandler, IPointerDownHandler, IPointerUpHandler, IPointerClickHandler
+public class Eraser : MonoBehaviour
 {
     private enum State
     {
         NotReady = 1,
         Ready,
     }
-    [SerializeField]
     private State _useState = State.NotReady;
 
+    [SerializeField]
+    private Text _countText;
     private RectTransform _rectTransform;
+    public GameObject _button;
+    public GameObject _AdChoosePannel;
 
     private Vector3 _oriPosition;
 
     private bool _isDraging = false;
+    private int _eraseTime = 3;
     // Start is called before the first frame update
     void Start()
     {
+        EventUtil.AddListener(BallonEventType.EraseSuccess, eraseSuccess);
         _rectTransform = GetComponent<RectTransform>();
         _oriPosition = _rectTransform.position;
-    }
-    public void OnPointerDown(PointerEventData eventData)
-    {
-        if(_useState == State.Ready)
-        {
-            _isDraging = true;
-            Debug.Log("BeginUIInteract");
-            EventUtil.SendMessage(EventType.BeginUIInteract, this);
-        }
+        _AdChoosePannel.SetActive(false);
+        _countText.text = _eraseTime.ToString();
     }
 
-    public void OnPointerUp(PointerEventData eventData)
+    private void OnEnable()
     {
-        if(_isDraging)
-        {
-            Debug.Log("EndUIInteract");
-            EventUtil.SendMessage(EventType.EndUIInteract, this);
-
-            int layerMask = LayerMask.NameToLayer("Balloon");
-            Ray ray = Camera.main.ScreenPointToRay(eventData.position);
-            RaycastHit2D[] hits = Physics2D.RaycastAll(ray.origin, ray.direction);
-            foreach (var hit in hits)
-            {
-                var balloon = hit.collider.GetComponent<Balloon>();
-
-                if (balloon)
-                {
-                    EventUtil.SendMessage(EventType.Destroy, balloon);
-                    Destroy(balloon.gameObject);
-                    _useState = State.NotReady;
-                }
-            }
-            _rectTransform.position = _oriPosition;
-        }
-        _isDraging = false;
+        _AdChoosePannel.SetActive(false);
     }
 
-    public void OnDrag(PointerEventData eventData)
+    public void OnButtonClick()
     {
-        if (_isDraging)
-        {
-            Vector3 pos;
-            RectTransformUtility.ScreenPointToWorldPointInRectangle(_rectTransform, eventData.position, eventData.enterEventCamera, out pos);
-            _rectTransform.position = pos;
-        }
+        _AdChoosePannel.SetActive(true);
     }
 
-    public void OnPointerClick(PointerEventData eventData)
+    public void OnYesButtonClick()
     {
-        if(_useState == State.NotReady)
+        if (_useState == State.NotReady)
         {
-
+            RewardedAdsManager.Instanse.ShowRewardedVideo(OnAdsSuccess);
         }
+        _AdChoosePannel.SetActive(false);
+    }
+
+    public void OnNoButtonClick()
+    {
+        _AdChoosePannel.SetActive(false);
+    }
+
+    private void OnAdsSuccess()
+    {
+        _eraseTime -= 1;
+        _countText.text = _eraseTime.ToString();
+        if (_eraseTime <= 0)
+        {
+            gameObject.SetActive(false);
+        }
+        _useState = State.Ready;
+        _button.SetActive(false);
+        EventUtil.SendMessage(BallonEventType.AdSuccess);
+    }
+
+    private void eraseSuccess(object args)
+    {
+        _useState = State.NotReady;
+        _button.SetActive(true);
     }
 }

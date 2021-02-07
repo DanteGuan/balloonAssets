@@ -4,6 +4,14 @@ using UnityEngine;
 
 public class BalloonManager : MonoBehaviour
 {
+    private enum GameState
+    {
+        Running,
+        ReadyToFinish,
+        InAds,
+        MainMenu,
+    }
+    private GameState _gameState = GameState.MainMenu;
     [SerializeField]
     private Transform _balloonRoot;
 
@@ -13,6 +21,8 @@ public class BalloonManager : MonoBehaviour
 
     [SerializeField]
     private Transform _finishTransform;
+    [SerializeField]
+    private SpriteRenderer _finishImage;
 
     private Vector3 _shooterTargetPos;
 
@@ -24,18 +34,35 @@ public class BalloonManager : MonoBehaviour
     private bool _isInUIInteract = false;
 
     private List<Balloon> _bollons = new List<Balloon>();
+
+    private bool _isGameStart = false;
+    [SerializeField]
+    private float _finishTime = 5.0f;
+    [SerializeField]
+    private int _maxGenerateID = 4;
     // Start is called before the first frame update
     void Start()
     {
         //EventUtil.AddListener(EventType.FinishLaunch, finishLaunch);
-        EventUtil.AddListener(EventType.Destroy, balloonDestroy);
-        EventUtil.AddListener(EventType.GameFinish, gameFinish);
-        EventUtil.AddListener(EventType.BeginUIInteract, beginUIInteract);
-        EventUtil.AddListener(EventType.EndUIInteract, endUIInteract);
-        EventUtil.AddListener(EventType.BalloonInteractBegin, balloonInteractBegin);
-        EventUtil.AddListener(EventType.BalloonInteractDraging, balloonInteractDraging);
-        EventUtil.AddListener(EventType.BalloonInteractEnd, balloonInteractEnd);
+        EventUtil.AddListener(BallonEventType.StartGame, startGame);
+        EventUtil.AddListener(BallonEventType.Destroy, balloonDestroy);
+        EventUtil.AddListener(BallonEventType.BackToMainMenu, backToMainMenu);
+        EventUtil.AddListener(BallonEventType.BeginUIInteract, beginUIInteract);
+        EventUtil.AddListener(BallonEventType.EndUIInteract, endUIInteract);
+        EventUtil.AddListener(BallonEventType.BalloonInteractBegin, balloonInteractBegin);
+        EventUtil.AddListener(BallonEventType.BalloonInteractDraging, balloonInteractDraging);
+        EventUtil.AddListener(BallonEventType.BalloonInteractEnd, balloonInteractEnd);
+        EventUtil.AddListener(BallonEventType.EraseSuccess, eraseSuccess); 
+        EventUtil.AddListener(BallonEventType.AdSuccess, adSuccess); 
 
+        _finishTransform.gameObject.SetActive(false); 
+        _gameState = GameState.MainMenu;
+    }
+
+    void startGame(object args)
+    {
+        _isGameStart = true;
+        _lastBalloon = null;
         _currentBalloon = randomGenerateBalloon();
 
         var screenWidth = Screen.width;
@@ -49,6 +76,22 @@ public class BalloonManager : MonoBehaviour
         shootPos.z = 0;
         _shooter.position = shootPos;
         _shooterTargetPos = shootPos;
+        _finishTransform.gameObject.SetActive(true);
+        _gameState = GameState.Running;
+    }
+
+    void adSuccess(object args)
+    {
+        _gameState = GameState.InAds;
+    }
+
+    void eraseSuccess(object args)
+    {
+        _gameState = GameState.Running;
+        foreach (var balloon in _bollons)
+        {
+            balloon.ResetInFinishTime();
+        }
     }
 
     void balloonInteractBegin(object args)
@@ -87,15 +130,16 @@ public class BalloonManager : MonoBehaviour
         _isInUIInteract = false;
     }
 
-    void gameFinish(object args)
+    void backToMainMenu(object args)
     {
-        foreach(var balloon in _bollons)
+        _gameState = GameState.MainMenu;
+        foreach (var balloon in _bollons)
         {
             Destroy(balloon.gameObject);
         }
         _bollons.Clear();
-        _currentBalloon = randomGenerateBalloon();
-        _lastBalloon = null;
+        _isGameStart = false;
+        _finishTransform.gameObject.SetActive(false);
     }
 
     void balloonDestroy(object args)
@@ -114,18 +158,27 @@ public class BalloonManager : MonoBehaviour
 
     Balloon randomGenerateBalloon()
     {
-        int id = Random.Range(1, 4);
+        int id = Random.Range(1, _maxGenerateID);
         var balloon = BalloonFactory.Instance.GenerateBollon(id);
         _bollons.Add(balloon);
         balloon.transform.SetParent(_balloonRoot);
         return balloon;
     }
 
+    bool shouldCheckFinish()
+    {
+        if (_gameState == GameState.InAds)
+            return false;
+        return true;
+    }
+
     // Update is called once per frame
     void Update()
     {
+        if (!_isGameStart)
+            return;
         _shootTimer += Time.deltaTime;
-        if(_currentBalloon == null && _shootTime <= _shootTimer)
+        if (_currentBalloon == null && _shootTime <= _shootTimer)
         {
             _currentBalloon = randomGenerateBalloon();
             _currentBalloon.transform.position = _shooter.position;
@@ -137,6 +190,48 @@ public class BalloonManager : MonoBehaviour
         if (_currentBalloon != null)
         {
             _currentBalloon.transform.position = _shooter.position;
+        }
+        var currentTime = Time.time;
+        float nearestTime = -1;
+        var shouldWarning = false;
+        _finishImage.enabled = false;
+        foreach (var balloon in _bollons)
+        {
+            if (balloon.isFinishShooting && balloon.inFinishAreaTime > 0)
+            {
+                _finishImage.enabled = true;
+                shouldWarning = true;
+                var diff = currentTime - balloon.inFinishAreaTime;
+                if (diff > nearestTime)
+                    nearestTime = diff;
+            }
+            if(balloon.isFinishShooting && !_finishImage.enabled)
+            {
+                if(balloon.transform.position.y - _finishTransform.position.y < 2)
+                {
+                    _finishImage.enabled = true;
+                }
+            }
+        }
+        if (shouldCheckFinish())
+        {
+            if (shouldWarning)
+            {
+                float leftTime = _finishTime - nearestTime;
+                if (leftTime > 0f)
+                {
+                    EventUtil.SendMessage(BallonEventType.GameoverWarning, Mathf.CeilToInt(leftTime));
+                }
+                else if (_gameState != GameState.ReadyToFinish)
+                {
+                    _gameState = GameState.ReadyToFinish;
+                    EventUtil.SendMessage(BallonEventType.ReadyToFinish);
+                }
+            }
+            else
+            {
+                EventUtil.SendMessage(BallonEventType.CancleGameoverWarning);
+            }
         }
     }
 }

@@ -2,8 +2,18 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum EventType
+public enum BallonEventType
 {
+    StartGame,
+    AdSuccess,
+    EraseSuccess,
+    BackToMainMenu,
+    ReadyToFinish,
+    GameoverWarning,
+    CancleGameoverWarning,
+    BalloonEnterFinishArea,
+    BalloonExitFinishArea,
+
     FinishLaunch,
     Destroy,
     GameFinish,
