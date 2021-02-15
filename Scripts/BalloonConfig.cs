@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -47,12 +47,12 @@ public class BalloonConfig
         _configs.Add(3, new ConfigNode(3, 0.9f, "Balloon/Images/planet_mercury", 4, 8, 30)); 
         _configs.Add(4, new ConfigNode(4, 1.1f, "Balloon/Images/planet_mars", 5, 16, 40)); 
         _configs.Add(5, new ConfigNode(5, 1.4f, "Balloon/Images/planet_venus", 6, 32, 50)); 
-        _configs.Add(6, new ConfigNode(6, 1.8f, "Balloon/Images/planet_earth", 7, 64, 60)); 
-        _configs.Add(7, new ConfigNode(7, 2.2f, "Balloon/Images/planet_neptune", 8, 128, 70)); 
-        _configs.Add(8, new ConfigNode(8, 2.4f, "Balloon/Images/planet_uranus", 9, 256, 80)); 
-        _configs.Add(9, new ConfigNode(9, 3f, "Balloon/Images/planet_saturn", 10, 512, 90));
-        _configs.Add(10, new ConfigNode(10, 3.2f, "Balloon/Images/planet_jupiter", 11, 1024, 100));
-        _configs.Add(11, new ConfigNode(11, 3.6f, "Balloon/Images/planet_sun", -1, 2048, 110));
+        _configs.Add(6, new ConfigNode(6, 1.7f, "Balloon/Images/planet_earth", 7, 64, 60)); 
+        _configs.Add(7, new ConfigNode(7, 2.0f, "Balloon/Images/planet_neptune", 8, 128, 70)); 
+        _configs.Add(8, new ConfigNode(8, 2.3f, "Balloon/Images/planet_uranus", 9, 256, 80)); 
+        _configs.Add(9, new ConfigNode(9, 2.6f, "Balloon/Images/planet_saturn", 10, 512, 90));
+        _configs.Add(10, new ConfigNode(10, 2.9f, "Balloon/Images/planet_jupiter", 11, 1024, 100));
+        _configs.Add(11, new ConfigNode(11, 3.2f, "Balloon/Images/planet_sun", -1, 2048, 110));
     }
 
     public ConfigNode GetConfig(int id)
