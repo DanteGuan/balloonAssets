@@ -45,7 +45,7 @@ CircleCollider2D:
   m_GameObject: {fileID: 8021210176230685131}
   m_Enabled: 1
   m_Density: 1
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: d266f1159b1e34a9d8318a54143e9d5c, type: 2}
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
@@ -68,7 +68,7 @@ Rigidbody2D:
   m_LinearDrag: 0
   m_AngularDrag: 10
   m_GravityScale: -1
-  m_Material: {fileID: 6200000, guid: e061c71b233b1ed4fa928dc4ab479e10, type: 2}
+  m_Material: {fileID: 0}
   m_Interpolate: 0
   m_SleepingMode: 2
   m_CollisionDetection: 0
@@ -100,6 +100,8 @@ MonoBehaviour:
   _collider: {fileID: 8021210176230685129}
   _image: {fileID: 8021210176726860992}
   _mergeParticle: {fileID: 8491197404982798916}
+  isFinishShooting: 0
+  inFinishAreaTime: -1
 --- !u!1 &8021210176726860994
 GameObject:
   m_ObjectHideFlags: 0
