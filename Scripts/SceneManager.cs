@@ -16,8 +16,10 @@ public class SceneManager : MonoBehaviour
     // Start is called before the first frame update
     private void Awake()
     {
+#if UNITY_IOS
         QualitySettings.vSyncCount = 0;
-        Application.targetFrameRate = Screen.currentResolution.refreshRate / 2;
+        Application.targetFrameRate = Screen.currentResolution.refreshRate;
+#endif
     }
     void Start()
     {

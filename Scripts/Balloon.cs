@@ -110,12 +110,12 @@ public class Balloon : MonoBehaviour
             var other = collision.collider.GetComponent<Balloon>();
             if (other && other._config.size == this._config.size)
             {
-                merge(this, other);
+                merge(this, other, collision.GetContact(0).point);
             }
         }
     }
 
-    private void merge(Balloon one, Balloon two)
+    private void merge(Balloon one, Balloon two, Vector2 contactPos)
     {
         if(!one._canMerge || !two._canMerge)
         {
@@ -125,15 +125,15 @@ public class Balloon : MonoBehaviour
         var compareValueTwo = two.transform.position.y;
         if(compareValueOne >= compareValueTwo)
         {
-            one.mergeFrom(two);
+            one.mergeFrom(two, contactPos);
         }
         else
         {
-            two.mergeFrom(one);
+            two.mergeFrom(one, contactPos);
         }
     }
 
-    private void mergeFrom(Balloon from)
+    private void mergeFrom(Balloon from, Vector2 contactPos)
     {
         if (this._config.nextID > 0)
         {
@@ -145,6 +145,7 @@ public class Balloon : MonoBehaviour
             _mergeParticle.Play();
             upgrade();
             from._canMerge = false;
+            //transform.position = new Vector3(contactPos.x, contactPos.y, transform.position.z);
             _canMerge = false;
             StartCoroutine(mergeCoroutine(from._image));
 
