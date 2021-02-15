@@ -14,6 +14,11 @@ public class SceneManager : MonoBehaviour
     private Transform _floor;
 
     // Start is called before the first frame update
+    private void Awake()
+    {
+        QualitySettings.vSyncCount = 0;
+        Application.targetFrameRate = Screen.currentResolution.refreshRate / 2;
+    }
     void Start()
     {
         resetScene();

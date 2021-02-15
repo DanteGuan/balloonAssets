@@ -166,9 +166,9 @@ public class Balloon : MonoBehaviour
         _collider.enabled = false;
         this.Init(this._config.nextID);
         _collider.enabled = true;
-        if(this._config.nextID > PlayerPrefs.GetInt("topBalloonID", 1))
+        if(this._config.id > PlayerPrefs.GetInt("topBalloonID", 1))
         {
-            PlayerPrefs.SetInt("topBalloonID", this._config.nextID);
+            PlayerPrefs.SetInt("topBalloonID", this._config.id);
         }
     }
 
