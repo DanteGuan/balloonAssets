@@ -22,11 +22,13 @@ public class Eraser : MonoBehaviour
     private Vector3 _oriPosition;
 
     private bool _isDraging = false;
+    private int _totalEraseTime = 3;
     private int _eraseTime = 3;
     // Start is called before the first frame update
     void Start()
     {
         EventUtil.AddListener(BallonEventType.EraseSuccess, eraseSuccess);
+        EventUtil.AddListener(BallonEventType.StartGame, startGame);
         _rectTransform = GetComponent<RectTransform>();
         _oriPosition = _rectTransform.position;
         _AdChoosePannel.SetActive(false);
@@ -74,5 +76,11 @@ public class Eraser : MonoBehaviour
     {
         _useState = State.NotReady;
         _button.SetActive(true);
+    }
+
+    private void startGame(object args)
+    {
+        _eraseTime = _totalEraseTime;
+        _countText.text = _eraseTime.ToString();
     }
 }
